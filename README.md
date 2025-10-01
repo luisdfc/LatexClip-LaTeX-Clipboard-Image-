@@ -1,6 +1,6 @@
 # LaTeX-to-Image Converter
 
-A simple tool to convert LaTeX equations into images that can be easily pasted into applications like Word, OneNote, or PowerPoint. It can also convert the LaTeX into plain text.
+This tool allows you to easily convert LaTeX equations into images. You can then paste these images into applications like Word, OneNote, or PowerPoint. It's especially useful for converting complex formulas you get from AI like ChatGPT, Gemini, or others, into a usable format for your documents and presentations. The tool also allows you to convert LaTeX into plain text.
 
 ![Screenshot 1](Screenshots/1.png)
 ![Screenshot 2](Screenshots/2.png)
