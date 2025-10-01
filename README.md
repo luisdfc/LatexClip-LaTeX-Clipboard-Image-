@@ -33,7 +33,7 @@ If you don't have Python, you need to install it first.
     ```
 3.  Install the necessary Python libraries by running this command:
     ```cmd
-    pip install pillow matplotlib pywin32
+    pip install pillow matplotlib pywin32 ttkthemes
     ```
 
 ### Step 4: Run the Application
