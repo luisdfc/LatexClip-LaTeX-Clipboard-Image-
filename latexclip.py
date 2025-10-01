@@ -32,6 +32,8 @@ except Exception as e:
 # -----------------------------
 def latex_to_plaintext(s: str) -> str:
     out = s
+    # Temporarily replace escaped braces to preserve them
+    out = out.replace(r"\{", "__LACE_BRACE__").replace(r"\}", "__RACE_BRACE__")
     out = re.sub(r"\$\$(.*?)\$\$", r"\1", out, flags=re.DOTALL)
     out = re.sub(r"\$(.*?)\$", r"\1", out, flags=re.DOTALL)
     out = re.sub(r"\\text\{([^}]*)\}", r"\1", out)
@@ -41,7 +43,10 @@ def latex_to_plaintext(s: str) -> str:
     out = re.sub(r"\\frac\{([^{}]+|\{[^}]*\})\}\{([^{}]+|\{[^}]*\})\}", repl_frac, out)
     out = re.sub(r"\^\{([^}]*)\}", r"^\1", out)
     out = re.sub(r"_\{([^}]*)\}", r"_\1", out)
+    # Now, it's safer to replace remaining braces
     out = out.replace("{", "(").replace("}", ")")
+    # Restore the escaped braces
+    out = out.replace("__LACE_BRACE__", "{").replace("__RACE_BRACE__", "}")
     out = re.sub(r"\s+", " ", out).strip()
     return out
 
@@ -141,6 +146,7 @@ class App(tk.Tk):
         self.minsize(820, 520)
         self.last_image = None
         self.last_photo = None
+        self.last_rendered_text = None
 
         top = ttk.Frame(self); top.pack(side=tk.TOP, fill=tk.X, padx=12, pady=8)
         ttk.Label(top, text="LaTeX input (e.g., V_0 = \\frac{D_1}{r_e - g} or $...$):").pack(side=tk.TOP, anchor="w")
@@ -178,6 +184,7 @@ class App(tk.Tk):
         png = render_latex_to_png_bytes(latex, fontsize=self.fontsize_var.get(), usetex=self.usetex_var.get())
         img = png_bytes_to_pil(png)
         self.last_image = img
+        self.last_rendered_text = latex
         max_w, max_h = 820, 280
         disp = img
         if img.width > max_w or img.height > max_h:
@@ -193,7 +200,9 @@ class App(tk.Tk):
 
     def on_copy_image(self):
         try:
-            if self.last_image is None: self.render()
+            # Re-render if text changed since last render
+            if self.last_image is None or self.get_input() != self.last_rendered_text:
+                self.render()
             if HAVE_PYWIN32:
                 copy_image_to_windows_clipboard(self.last_image); self.set_status("Image copied to clipboard ✔  (Ctrl+V into Word/OneNote)")
             else:
