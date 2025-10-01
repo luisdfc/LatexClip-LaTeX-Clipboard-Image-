@@ -33,8 +33,10 @@ If you don't have Python, you need to install it first.
     ```
 3.  Install the necessary Python libraries by running this command:
     ```cmd
-    pip install pillow matplotlib pywin32
+    pip install pillow matplotlib ttkthemes pywin32
     ```
+    *On non-Windows systems the `pywin32` dependency is optional and can be
+    omitted.*
 
 ### Step 4: Run the Application
 
@@ -89,8 +91,11 @@ pip install pyinstaller
 
 In the Command Prompt, navigate to the tool's directory and run the following command:
 
+Use the bundled spec file so PyInstaller collects the themed assets and
+matplotlib backends automatically:
+
 ```cmd
-pyinstaller --noconsole --onefile latexclip.py
+pyinstaller latexclip.spec
 ```
 
 After a few moments, you will find a `dist` folder. Inside, `latexclip.exe` is your standalone application. You can move this file anywhere on your computer or create a shortcut to it on your desktop.
