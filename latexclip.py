@@ -34,15 +34,37 @@ def latex_to_plaintext(s: str) -> str:
     out = s
     # Temporarily replace escaped braces to preserve them
     out = out.replace(r"\{", "__LACE_BRACE__").replace(r"\}", "__RACE_BRACE__")
+    # Strip delimiters
     out = re.sub(r"\$\$(.*?)\$\$", r"\1", out, flags=re.DOTALL)
     out = re.sub(r"\$(.*?)\$", r"\1", out, flags=re.DOTALL)
+
+    # Handle common functions
+    out = re.sub(r"\\(sin|cos|tan|log|ln|det|dim|lim|exp|deg)\s*", r"\1", out)
+    # Handle Greek letters
+    greek = r"alpha|beta|gamma|delta|epsilon|zeta|eta|theta|iota|kappa|lambda|mu|nu|xi|pi|rho|sigma|tau|upsilon|phi|chi|psi|omega"
+    greek += r"|Gamma|Delta|Theta|Lambda|Xi|Pi|Sigma|Upsilon|Phi|Psi|Omega"
+    out = re.sub(r"\\(" + greek + r")", r"\1", out)
+    # Handle symbols
+    out = re.sub(r"\\(cdot|times)", "*", out)
+    out = re.sub(r"\\pm", "+-", out)
+    out = re.sub(r"\\mp", "-+", out)
+
+    # Handle \sqrt
+    out = re.sub(r"\\sqrt\[([^\]]*)\]\{([^}]*)\}", r"(\2)^(1/\1)", out)
+    out = re.sub(r"\\sqrt\{([^}]*)\}", r"sqrt(\1)", out)
+
     out = re.sub(r"\\text\{([^}]*)\}", r"\1", out)
     def repl_frac(m):
         num = m.group(1); den = m.group(2)
         return f"({num})/({den})"
     out = re.sub(r"\\frac\{([^{}]+|\{[^}]*\})\}\{([^{}]+|\{[^}]*\})\}", repl_frac, out)
+
     out = re.sub(r"\^\{([^}]*)\}", r"^\1", out)
     out = re.sub(r"_\{([^}]*)\}", r"_\1", out)
+
+    # Replace \left and \right with nothing, as they are for visual grouping
+    out = out.replace(r"\left", "").replace(r"\right", "")
+
     # Now, it's safer to replace remaining braces
     out = out.replace("{", "(").replace("}", ")")
     # Restore the escaped braces
@@ -100,7 +122,6 @@ def render_latex_to_png_bytes(latex: str, fontsize: int = 28, usetex: bool = Fal
         ax.text(0.01, 0.5, content, ha="left", va="center", fontsize=fontsize)
         buf = io.BytesIO()
         plt.savefig(buf, format="png", dpi=300, transparent=True, bbox_inches='tight', pad_inches=0.02)
-        plt.close(fig)
         buf.seek(0)
         # Trim transparent padding then clamp to safe size
         img = Image.open(buf).convert("RGBA")
@@ -114,8 +135,11 @@ def render_latex_to_png_bytes(latex: str, fontsize: int = 28, usetex: bool = Fal
         out.seek(0)
         return out.getvalue()
     except Exception as e:
+        # Add context to the error message
+        raise RuntimeError(f"Matplotlib error: {e}\nCheck LaTeX syntax or for missing packages.") from e
+    finally:
+        # Ensure the figure is always closed to conserve memory
         plt.close(fig)
-        raise
 
 def png_bytes_to_pil(png_bytes):
     from PIL import Image
@@ -124,14 +148,28 @@ def png_bytes_to_pil(png_bytes):
 def copy_image_to_windows_clipboard(img):
     if not HAVE_PYWIN32:
         raise RuntimeError("pywin32 not installed. Install with: pip install pywin32")
-    with io.BytesIO() as output:
+
+    # For apps that support transparent PNGs (e.g., Word, OneNote)
+    with io.BytesIO() as png_output:
+        img.save(png_output, "PNG")
+        png_data = png_output.getvalue()
+
+    # For older apps, provide a DIB (BMP) without transparency
+    with io.BytesIO() as bmp_output:
+        # BMP format requires RGB
         bmp = img.convert("RGB")
-        bmp.save(output, "BMP")
-        data = output.getvalue()[14:]
+        bmp.save(bmp_output, "BMP")
+        # The DIB format is the BMP content without the 14-byte file header
+        bmp_data = bmp_output.getvalue()[14:]
+
     win32clipboard.OpenClipboard()
     try:
         win32clipboard.EmptyClipboard()
-        win32clipboard.SetClipboardData(win32con.CF_DIB, data)
+        # Register the PNG format
+        CF_PNG = win32clipboard.RegisterClipboardFormatW("PNG")
+        # Set both formats. Apps can choose which one they prefer.
+        win32clipboard.SetClipboardData(CF_PNG, png_data)
+        win32clipboard.SetClipboardData(win32con.CF_DIB, bmp_data)
     finally:
         win32clipboard.CloseClipboard()
 
@@ -141,7 +179,7 @@ def copy_image_to_windows_clipboard(img):
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("LaTeX → Image / Text (Copy-Paste) — v3 safe")
+        self.title("LaTeX → Image / Text (Copy-Paste) — v4 Enhanced")
         self.geometry("900x600")
         self.minsize(820, 520)
         self.last_image = None
@@ -204,7 +242,7 @@ class App(tk.Tk):
             if self.last_image is None or self.get_input() != self.last_rendered_text:
                 self.render()
             if HAVE_PYWIN32:
-                copy_image_to_windows_clipboard(self.last_image); self.set_status("Image copied to clipboard ✔  (Ctrl+V into Word/OneNote)")
+                copy_image_to_windows_clipboard(self.last_image); self.set_status("Image (with transparency) copied to clipboard ✔  (Ctrl+V into Word/OneNote)")
             else:
                 out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "latex_output.png")
                 self.last_image.save(out, "PNG")
