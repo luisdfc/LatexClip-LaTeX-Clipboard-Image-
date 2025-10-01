@@ -80,6 +80,13 @@ def sanitize_for_mathtext(s: str) -> str:
     if text.startswith(r"\[") and text.endswith(r"\]"):
         text = text[2:-2].strip()
     already_math = text.startswith("$") and text.endswith("$")
+
+    def escape_literals(segment: str) -> str:
+        """Escape characters that would otherwise break mathtext rendering."""
+        # Escape TeX special characters that commonly appear in plain text.
+        return re.sub(r"(?<!\\)([%&#$])", r"\\\1", segment)
+
+    text = escape_literals(text)
     def to_rm(m):
         return r"\mathrm{" + m.group(1) + "}"
     text = re.sub(r"\\text\{([^}]*)\}", to_rm, text)
