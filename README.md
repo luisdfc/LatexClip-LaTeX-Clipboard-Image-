@@ -2,7 +2,8 @@
 
 A simple tool to convert LaTeX equations into images that can be easily pasted into applications like Word, OneNote, or PowerPoint. It can also convert the LaTeX into plain text.
 
-![Tool Screenshot](https://i.imgur.com/your_screenshot.png) <!-- Placeholder for a future screenshot -->
+![Screenshot 1](Screenshots/1.png)
+![Screenshot 2](Screenshots/2.png)
 
 ## Quick Start (No Programming Knowledge Needed)
 
@@ -15,8 +16,6 @@ If you don't have Python, you need to install it first.
 1.  Go to the official Python website: [python.org/downloads/windows](https://www.python.org/downloads/windows/)
 2.  Download the latest stable version (e.g., Python 3.12).
 3.  Run the installer. **Important:** On the first screen of the installer, make sure to check the box that says **"Add Python to PATH"**. This will make the next steps much easier.
-
-![Add Python to PATH](https://i.imgur.com/add_python_to_path.png) <!-- Placeholder -->
 
 ### Step 2: Download This Tool
 
