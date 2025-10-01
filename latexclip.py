@@ -4,6 +4,7 @@ import os
 import re
 import tkinter as tk
 from tkinter import ttk, messagebox
+from ttkthemes import ThemedTk
 
 try:
     from PIL import Image, ImageTk
@@ -176,38 +177,61 @@ def copy_image_to_windows_clipboard(img):
 # -----------------------------
 # GUI
 # -----------------------------
-class App(tk.Tk):
+class App(ThemedTk):
     def __init__(self):
-        super().__init__()
-        self.title("LaTeX → Image / Text (Copy-Paste) — v4 Enhanced")
+        super().__init__(theme="aquativo")
+        self.title("LaTeX Clip")
         self.geometry("900x600")
         self.minsize(820, 520)
+
+        # System-native font for a cleaner look
+        font_ui = ("Segoe UI", 10)
+        font_editor = ("Consolas", 12)
+        self.option_add("*Font", font_ui)
+
         self.last_image = None
         self.last_photo = None
         self.last_rendered_text = None
 
-        top = ttk.Frame(self); top.pack(side=tk.TOP, fill=tk.X, padx=12, pady=8)
-        ttk.Label(top, text="LaTeX input (e.g., V_0 = \\frac{D_1}{r_e - g} or $...$):").pack(side=tk.TOP, anchor="w")
-        self.txt = tk.Text(self, wrap="word", height=10, font=("Consolas", 12))
-        self.txt.pack(side=tk.TOP, fill=tk.BOTH, expand=False, padx=12, pady=(0,8))
+        # Use a style to configure the background color of the frames
+        style = ttk.Style()
+        style.configure("TFrame", background=style.lookup("TFrame", "background"))
+        style.configure("Preview.TLabel", background="#f0f0f0")
 
-        options = ttk.Frame(self); options.pack(side=tk.TOP, fill=tk.X, padx=12, pady=0)
+        # Main container
+        main_frame = ttk.Frame(self, padding=(20, 12))
+        main_frame.pack(fill=tk.BOTH, expand=True)
+
+        # Input section
+        input_frame = ttk.Frame(main_frame)
+        input_frame.pack(fill=tk.X)
+        ttk.Label(input_frame, text="LaTeX Input", font=("Segoe UI", 11, "bold")).pack(anchor="w", pady=(0, 4))
+        self.txt = tk.Text(input_frame, wrap="word", height=8, font=font_editor, relief=tk.FLAT, borderwidth=10)
+        self.txt.pack(fill=tk.BOTH, expand=True)
+
+        # Options section
+        options_frame = ttk.Frame(main_frame)
+        options_frame.pack(fill=tk.X, pady=12)
         self.fontsize_var = tk.IntVar(value=28)
         self.usetex_var = tk.BooleanVar(value=False)
-        ttk.Label(options, text="Font size:").pack(side=tk.LEFT, padx=(0,6))
-        spin = ttk.Spinbox(options, from_=10, to=96, textvariable=self.fontsize_var, width=5); spin.pack(side=tk.LEFT, padx=(0,12))
-        ttk.Checkbutton(options, text="Use full LaTeX (MiKTeX/TeX Live)", variable=self.usetex_var).pack(side=tk.LEFT, padx=(0,12))
 
-        btns = ttk.Frame(self); btns.pack(side=tk.TOP, fill=tk.X, padx=12, pady=8)
-        ttk.Button(btns, text="Preview", command=self.on_preview).pack(side=tk.LEFT)
-        ttk.Button(btns, text="Copy as IMAGE", command=self.on_copy_image).pack(side=tk.LEFT, padx=6)
-        ttk.Button(btns, text="Copy as PLAIN TEXT", command=self.on_copy_text).pack(side=tk.LEFT, padx=6)
+        ttk.Label(options_frame, text="Font Size:", font=font_ui).pack(side=tk.LEFT, padx=(0, 6))
+        ttk.Spinbox(options_frame, from_=10, to=96, textvariable=self.fontsize_var, width=5).pack(side=tk.LEFT, padx=(0, 16))
+        ttk.Checkbutton(options_frame, text="Use full LaTeX (MiKTeX/TeX Live)", variable=self.usetex_var).pack(side=tk.LEFT)
 
+        # Actions section
+        btns_frame = ttk.Frame(main_frame)
+        btns_frame.pack(fill=tk.X)
+        ttk.Button(btns_frame, text="Preview", command=self.on_preview).pack(side=tk.LEFT, padx=(0, 8))
+        ttk.Button(btns_frame, text="Copy as Image", command=self.on_copy_image).pack(side=tk.LEFT, padx=4)
+        ttk.Button(btns_frame, text="Copy as Plain Text", command=self.on_copy_text).pack(side=tk.LEFT, padx=8)
+
+        # Status and Preview
         self.status = tk.StringVar(value="Ready")
-        ttk.Label(self, textvariable=self.status, foreground="#555").pack(side=tk.TOP, anchor="w", padx=12)
+        ttk.Label(main_frame, textvariable=self.status, foreground="#666").pack(anchor="w", pady=(12, 4))
 
-        self.preview = ttk.Label(self, anchor="center")
-        self.preview.pack(side=tk.TOP, fill=tk.BOTH, expand=True, padx=12, pady=8)
+        self.preview = ttk.Label(main_frame, anchor="center", style="Preview.TLabel")
+        self.preview.pack(fill=tk.BOTH, expand=True, pady=4)
 
     def get_input(self) -> str:
         return self.txt.get("1.0", "end-1c").strip()
