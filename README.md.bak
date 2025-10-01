@@ -1,0 +1,40 @@
+# **Instrucciones:**
+
+**pip install pyinstaller pillow matplotlib pywin32**
+
+**cd "C:\\Users\\luiyi\\GitHub Proyects\\LaTex to png"**
+
+**python -m PyInstaller --noconsole --onefile "latex\_copier\_v3.py"**
+
+
+
+**------------------------------------------------------------------**
+
+
+
+# **For Full LaTeX**
+
+🔹 1. A LaTeX distribution
+
+    You need one of these (choose one):
+
+        MiKTeX (recommended for Windows)
+
+        👉 Download MiKTeX Installer
+
+        It’s free, lighter than TeX Live.
+
+        It will auto-download only the packages needed (so you don’t have to install everything upfront).
+
+    TeX Live (alternative, bigger)
+
+        👉 Download TeX Live
+
+🔹 2. Ghostscript
+
+    Matplotlib often calls Ghostscript when usetex=True.
+
+        👉 Download Ghostscript for Windows
+
+
+Install and make sure the bin folder is in your PATH (the installer usually does this automatically).
