@@ -173,8 +173,14 @@ def copy_image_to_windows_clipboard(img):
     win32clipboard.OpenClipboard()
     try:
         win32clipboard.EmptyClipboard()
-        # Register the PNG format
-        CF_PNG = win32clipboard.RegisterClipboardFormatW("PNG")
+        # Register the PNG format. Older versions of pywin32 only expose
+        # RegisterClipboardFormat without the explicit "W" (wide) suffix,
+        # so fall back to that name if the Unicode-specific helper is
+        # unavailable.
+        register_format = getattr(win32clipboard, "RegisterClipboardFormatW", None)
+        if register_format is None:
+            register_format = win32clipboard.RegisterClipboardFormat
+        CF_PNG = register_format("PNG")
         # Set both formats. Apps can choose which one they prefer.
         win32clipboard.SetClipboardData(CF_PNG, png_data)
         win32clipboard.SetClipboardData(win32con.CF_DIB, bmp_data)
