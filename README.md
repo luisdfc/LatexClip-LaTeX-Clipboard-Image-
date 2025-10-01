@@ -97,7 +97,7 @@ matplotlib backends automatically:
 ```cmd
 pyinstaller latexclip.spec
 or
-python -m PyInstaller --noconsole --onefile "latex_copier.py"
+python -m PyInstaller --noconsole --onefile "latexclip.py"
 ```
 
 After a few moments, you will find a `dist` folder. Inside, `latexclip.exe` is your standalone application. You can move this file anywhere on your computer or create a shortcut to it on your desktop.
